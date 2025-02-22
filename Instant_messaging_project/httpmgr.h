@@ -16,12 +16,13 @@ class HttpMgr : public QObject,public Singleton<HttpMgr>,
 
 public:
     ~HttpMgr();
+    void PostHttpReq(QUrl url,QJsonObject json,ReqId req_id,Modules mod);
 private:
     //singleton里面getInstance里面有个new T需要构造，T是httpmgr，所以声明友元
     friend class Singleton<HttpMgr>;//让基类可以访问子类的构造函数
     HttpMgr();
     QNetworkAccessManager m_manger;
-    void PostHttpReq(QUrl url,QJsonObject json,ReqId req_id,Modules mod);
+
 
 private slots:
     void slot_http_finish(ReqId id,QString res, ErrorCodes err,Modules mod);
