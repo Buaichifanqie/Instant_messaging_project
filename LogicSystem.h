@@ -12,6 +12,9 @@ public:
 	~LogicSystem() {}
 	bool HandleGet(std::string,std::shared_ptr<HttpConnection>);
 	void RegGet(std::string,HttpHandler handler);
+	void RegPost(std::string, HttpHandler handler);
+	bool HandlePost(std::string, std::shared_ptr<HttpConnection>);
+
 private:
 	LogicSystem();
 	std::map<std::string, HttpHandler> m_post_handlers;
