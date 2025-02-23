@@ -51,6 +51,12 @@ public:
         return m_config_map[section];
     }
 
+    static ConfigMgr& Inst()
+    {
+        static ConfigMgr cfg_mgr;
+        return cfg_mgr;
+    }
+
     ConfigMgr& operator=(const ConfigMgr& src) {
         if (&src == this) {
             return *this;
@@ -60,10 +66,10 @@ public:
     ConfigMgr(const ConfigMgr& src) {
         this->m_config_map = src.m_config_map;
     }
-
-    ConfigMgr();
+         
 
 private:
+    ConfigMgr();
     std::map<std::string, SectionInfo> m_config_map;
 };
 

@@ -128,6 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AsioIOServerPool.cpp" />
     <ClCompile Include="ConfigMgr.cpp" />
     <ClCompile Include="CServer.cpp" />
     <ClCompile Include="GateServer.cpp" />
@@ -138,6 +139,7 @@
     <ClCompile Include="VerifyGrpcClient.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AsioIOServerPool.h" />
     <ClInclude Include="ConfigMgr.h" />
     <ClInclude Include="const.h" />
     <ClInclude Include="CServer.h" />

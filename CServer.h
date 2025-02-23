@@ -13,6 +13,5 @@ private:
 	//接收器接收对端的链接
 	tcp::acceptor m_acceptor;
 	net::io_context& m_ioc;
-	tcp::socket m_socket;
 };
 
