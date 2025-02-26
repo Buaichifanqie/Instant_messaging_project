@@ -40,3 +40,19 @@ enum ErrorCodes {
 };
 
 #define CODEPREFIX "code_"
+
+//Defer类 RAII技术
+class Defer {
+public:
+	//接收一个lambda表达式或函数指针
+	Defer(std::function<void()>func) :m_func(func) {
+
+	}
+	//析构函数中执行传入的函数
+	~Defer(){
+		m_func();
+	}
+
+private:
+	std::function<void()> m_func;
+};

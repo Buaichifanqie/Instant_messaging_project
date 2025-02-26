@@ -358,6 +358,14 @@ void RedisConPool::returnConnection(redisContext* context)
     }
     m_connections.push(context);
     m_cond.notify_one();
+    //std::lock_guard<std::mutex> lock(m_mutex);
+    //if (!m_b_stop) {
+    //    m_connections.push(context);
+    //    m_cond.notify_one();
+    //}
+    //else {
+    //    redisFree(context); // 如果连接池已关闭，释放连接
+    //}
 }
 
 void RedisConPool::Close()

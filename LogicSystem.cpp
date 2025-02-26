@@ -2,6 +2,7 @@
 #include "HttpConnection.h"
 #include "VerifyGrpcClient.h"
 #include "RedisMgr.h"
+#include "MysqlMgr.h"
 
 bool LogicSystem::HandleGet(std::string path, std::shared_ptr<HttpConnection> con)
 {
@@ -135,18 +136,22 @@ LogicSystem::LogicSystem()
 			beast::ostream(connection->m_response.body()) << jsonstr;
 			return true;
 		}
-		////访问redis查找
-		//bool b_usr_exist = RedisMgr::GetInstance()->ExistsKey(src_root["user"].asString());
-		//if (b_usr_exist) {
-		//	std::cout << " user exist" << std::endl;
-		//	root["error"] = ErrorCodes::UserExist;
-		//	std::string jsonstr = root.toStyledString();
-		//	beast::ostream(connection->m_response.body()) << jsonstr;
-		//	return true;
-		//}
+
 		//查找数据库判断用户是否存在
+		int uid = MysqlMgr::GetInstance()->RegUser(name, email, pwd);
+		if (uid == 0 || uid == -1)
+		{
+			std::cout << " user or email exist" << std::endl;
+			root["error"] = ErrorCodes::UserExist;
+			std::string jsonstr = root.toStyledString();
+			beast::ostream(connection->m_response.body()) << jsonstr;
+			return true;
+		}
+
+
 		root["error"] = 0;
 		root["email"] = email;
+		root["uid"] = uid;
 		root["user"] = name;
 		root["passwd"] = pwd;
 		root["confirm"] = confirm;
