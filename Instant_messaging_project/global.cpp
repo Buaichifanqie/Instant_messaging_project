@@ -13,3 +13,16 @@ std::function<void(QWidget*)> repolish = [](QWidget* w) {
     // polish() 会重新应用样式表到 QWidget
     w->style()->polish(w);
 };
+
+
+std::function<QString(QString)> xorString=[](QString input)
+{
+    QString result=input;
+    int length=input.length();
+    length=length%255;
+    for(int i=0;i<length;i++)
+    {
+        result[i]=QChar(static_cast<ushort>(input[i].unicode()^static_cast<ushort>(length)));
+    }
+    return result;
+};

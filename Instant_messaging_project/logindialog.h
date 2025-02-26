@@ -16,6 +16,7 @@ public:
     ~LoginDialog();
 
 private:
+
     Ui::LoginDialog *ui;
 signals:
     void switchRegister();
