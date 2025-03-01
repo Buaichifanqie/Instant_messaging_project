@@ -25,8 +25,7 @@ private slots:
 
     void on_pushButton_clicked();
 
-    void on_return_btn_clicked();
-
+    void on_cancel_btn_clicked();
 private:
     bool checkUserValid();
     bool checkEmailValid();
