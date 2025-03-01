@@ -1,75 +1,83 @@
 #pragma once
-#include "const.h"
+#include <fstream>  
+#include <boost/property_tree/ptree.hpp>  
+#include <boost/property_tree/ini_parser.hpp>  
+#include <boost/filesystem.hpp>    
+#include <map>
+#include <iostream>
+
 struct SectionInfo {
-    // 默认构造函数（可以省略）
-    SectionInfo() {}
+	SectionInfo(){}
+	~SectionInfo(){
+		_section_datas.clear();
+	}
+	
+	SectionInfo(const SectionInfo& src) {
+		_section_datas = src._section_datas;
+	}
+	
+	SectionInfo& operator = (const SectionInfo& src) {
+		if (&src == this) {
+			return *this;
+		}
 
-    // 析构函数（可以省略）
-    ~SectionInfo()
-    {
-        m_section_datas.clear();
-    }
+		this->_section_datas = src._section_datas;
+		return *this;
+	}
 
-    // 拷贝构造函数
-    SectionInfo(const SectionInfo& src) {
-        m_section_datas = src.m_section_datas;
-    }
+	std::map<std::string, std::string> _section_datas;
+	std::string  operator[](const std::string  &key) {
+		if (_section_datas.find(key) == _section_datas.end()) {
+			return "";
+		}
+		// 这里可以添加一些边界检查  
+		return _section_datas[key];
+	}
 
-    // 拷贝赋值运算符
-    SectionInfo& operator=(const SectionInfo& src) {
-        if (&src == this) {
-            return *this;
-        }
-        m_section_datas = src.m_section_datas;
-        return *this;
-    }
-
-    // 重载 [] 运算符
-    std::string operator[](const std::string& key) const {
-        auto it = m_section_datas.find(key);
-        if (it == m_section_datas.end()) {
-            return "";
-        }
-        return it->second;
-    }
-
-    // 成员变量
-    std::map<std::string, std::string> m_section_datas;
+	std::string GetValue(const std::string & key) {
+		if (_section_datas.find(key) == _section_datas.end()) {
+			return "";
+		}
+		// 这里可以添加一些边界检查  
+		return _section_datas[key];
+	}
 };
 
 class ConfigMgr
 {
 public:
-    ~ConfigMgr() {
-        m_config_map.clear();
-    }
+	~ConfigMgr() {
+		_config_map.clear();
+	}
+	SectionInfo operator[](const std::string& section) {
+		if (_config_map.find(section) == _config_map.end()) {
+			return SectionInfo();
+		}
+		return _config_map[section];
+	}
 
-    SectionInfo operator[](const std::string& section) {
-        if (m_config_map.find(section) == m_config_map.end()) {
-            return SectionInfo();
-        }
-        return m_config_map[section];
-    }
 
-    static ConfigMgr& Inst()
-    {
-        static ConfigMgr cfg_mgr;
-        return cfg_mgr;
-    }
+	ConfigMgr& operator=(const ConfigMgr& src) {
+		if (&src == this) {
+			return *this;
+		}
 
-    ConfigMgr& operator=(const ConfigMgr& src) {
-        if (&src == this) {
-            return *this;
-        }
-        this->m_config_map = src.m_config_map;
-    };
-    ConfigMgr(const ConfigMgr& src) {
-        this->m_config_map = src.m_config_map;
-    }
-         
+		this->_config_map = src._config_map;
+	};
 
+	ConfigMgr(const ConfigMgr& src) {
+		this->_config_map = src._config_map;
+	}
+
+	static ConfigMgr& Inst() {
+		static ConfigMgr cfg_mgr;
+		return cfg_mgr;
+	}
+
+	std::string GetValue(const std::string& section, const std::string & key);
 private:
-    ConfigMgr();
-    std::map<std::string, SectionInfo> m_config_map;
+	ConfigMgr();
+	// 存储section和key-value对的map  
+	std::map<std::string, SectionInfo> _config_map;
 };
 
