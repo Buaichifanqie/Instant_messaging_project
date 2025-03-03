@@ -14,7 +14,10 @@ RC_ICONS=pikaqiu.ico
 DESTDIR=./bin
 
 SOURCES += \
+    chatdialog.cpp \
+    clickedbtn.cpp \
     clickedlabel.cpp \
+    customizeedit.cpp \
     global.cpp \
     httpmgr.cpp \
     logindialog.cpp \
@@ -22,10 +25,15 @@ SOURCES += \
     mainwindow.cpp \
     registerdialog.cpp \
     resetdialog.cpp \
-    timerbtn.cpp
+    tcpmgr.cpp \
+    timerbtn.cpp \
+    usermgr.cpp
 
 HEADERS += \
+    chatdialog.h \
+    clickedbtn.h \
     clickedlabel.h \
+    customizeedit.h \
     global.h \
     httpmgr.h \
     logindialog.h \
@@ -33,9 +41,12 @@ HEADERS += \
     registerdialog.h \
     resetdialog.h \
     singleton.h \
-    timerbtn.h
+    tcpmgr.h \
+    timerbtn.h \
+    usermgr.h
 
 FORMS += \
+    chatdialog.ui \
     logindialog.ui \
     mainwindow.ui \
     registerdialog.ui \

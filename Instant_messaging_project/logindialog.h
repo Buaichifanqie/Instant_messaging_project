@@ -34,8 +34,8 @@ private slots:
     void slot_forget_pwd();
     void on_login_btn_clicked();
     void slot_login_mod_finish(ReqId id, QString res, ErrorCodes err);
-    // void slot_tcp_con_finish(bool bsuccess);
-    // void slot_login_failed(int);
+    void slot_tcp_con_finish(bool bsuccess);
+    void slot_login_failed(int);
 
 signals:
     void switchRegister();
