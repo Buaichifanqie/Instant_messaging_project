@@ -9,6 +9,7 @@ class ClickedBtn : public QPushButton
 public:
     ClickedBtn(QWidget* parent=nullptr);
     ~ClickedBtn();
+    void repolish(QWidget *widget);
     void SetState(QString normal, QString hover, QString press);
 protected:
     virtual void enterEvent(QEvent* event) override;//鼠标进入
