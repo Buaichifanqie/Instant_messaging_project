@@ -18,6 +18,10 @@ public:
     //测试
     void addChatUserList();
     void ClearLabelState(StateWidget* lb);
+
+protected:
+    bool eventFilter(QObject* watched,QEvent* event)override;
+    void handleGlobalMousePress(QMouseEvent* event);
 private:
     void AddLBGroup(StateWidget* lb);
     void ShowSearch(bool bsearch=false);
