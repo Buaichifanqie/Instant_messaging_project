@@ -30,4 +30,9 @@ QString UserMgr::GetName()
     return m_name;
 }
 
+std::vector<std::shared_ptr<ApplyInfo> > UserMgr::GetApplyList()
+{
+    return m_apply_list;
+}
+
 UserMgr::UserMgr() {}

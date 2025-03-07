@@ -81,6 +81,8 @@ enum ListItemType{
     ADD_USER_TIP_ITEM, // 提示添加用户
     INVALID_ITEM,      // 不可点击条目
     GROUP_TIP_ITEM,    // 分组提示条目
+    LINE_ITEM,//分割线
+    APPLY_FRIEND_ITEM,//好友申请
 };
 
 enum ErrorCodes{
@@ -101,6 +103,36 @@ const int MIN_APPLY_LABEL_ED_LEN = 40;
 const QString add_prefix = "添加标签";
 
 const int tip_offset = 5;
+
+
+
+const std::vector<QString>  strs ={"hello world !",
+                                   "nice to meet u",
+                                   "New year，new life",
+                                   "You have to love yourself",
+                                   "My love is written in the wind ever since the whole world is you"};
+
+const std::vector<QString> heads = {
+    ":/rec/head_1.jpg",
+    ":/rec/head_2.jpg",
+    ":/rec/head_3.jpg",
+    ":/rec/head_4.jpg",
+    ":/rec/head_5.jpg"
+};
+
+const std::vector<QString> names = {
+    "HanMeiMei",
+    "Lily",
+    "Ben",
+    "Androw",
+    "Max",
+    "Summer",
+    "Candy",
+    "Hunter"
+};
+
+
+
 
 extern QString gate_url_prefix;
 
