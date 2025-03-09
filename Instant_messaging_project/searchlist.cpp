@@ -1,4 +1,5 @@
 #include "searchlist.h"
+#include <QJsonDocument>
 #include <QScrollBar>
 #include "tcpmgr.h"
 #include "customizeedit.h"
@@ -6,6 +7,7 @@
 #include "adduseritem.h"
 #include "findsuccessdlg.h"
 #include "userdata.h"
+#include "findfaildlg.h"
 
 SearchList::SearchList(QWidget *parent):QListWidget(parent),m_find_dlg(nullptr), m_search_edit(nullptr), m_send_pending(false)
 {
@@ -33,12 +35,24 @@ void SearchList::CloseFindDlg()
 
 void SearchList::SetSearchEdit(QWidget *edit)
 {
-
+    m_search_edit=edit;
 }
 
 void SearchList::waitPending(bool pending)
 {
-
+    if(pending)
+    {
+        m_loadingDialog=new LoadingDlg(this);
+        m_loadingDialog->setModal(true);
+        m_loadingDialog->show();
+        m_send_pending=pending;
+    }
+    else
+    {
+        m_loadingDialog->hide();
+        m_loadingDialog->deleteLater();
+        m_send_pending=pending;
+    }
 }
 
 void SearchList::addTipItem()
@@ -95,11 +109,27 @@ void SearchList::slot_item_clicked(QListWidgetItem *item)
 
     if(itemType==ListItemType::ADD_USER_TIP_ITEM)
     {
-        //todo...
-        m_find_dlg= std::make_shared<FindSuccessDlg>(this);
-        auto si = std::make_shared<SearchInfo>(0,"我是番茄","fanqie","hello , my friend!",0);
-        std::dynamic_pointer_cast<FindSuccessDlg>(m_find_dlg)->SetSearchInfo(si);
-        m_find_dlg->show();
+        if(m_send_pending)
+        {
+            return;
+        }
+
+        if(!m_search_edit)
+        {
+            return;
+        }
+
+        waitPending(true);
+        auto search_edit=dynamic_cast<CustomizeEdit*>(m_search_edit);
+        auto uid_str=search_edit->text();
+
+        QJsonObject jsonObj;
+        jsonObj["uid"]=uid_str;
+
+        QJsonDocument doc(jsonObj);
+        QByteArray jsonData=doc.toJson(QJsonDocument::Compact);
+        emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_SEARCH_USER_REQ,jsonData);
+
         return;
     }
 
@@ -110,5 +140,17 @@ void SearchList::slot_item_clicked(QListWidgetItem *item)
 
 void SearchList::slot_user_search(std::shared_ptr<SearchInfo> si)
 {
-
+    waitPending(false);
+    if(si==nullptr)
+    {
+        m_find_dlg=std::make_shared<FindFailDlg>(this);
+    }
+    else
+    {
+        //两种情况 一种是搜的都是自己的朋友了 一种是未添加好友
+        //查找是否已经是好友了 todo....
+        m_find_dlg=std::make_shared<FindSuccessDlg>(this);
+        std::dynamic_pointer_cast<FindSuccessDlg>(m_find_dlg)->SetSearchInfo(si);
+    }
+    m_find_dlg->show();
 }

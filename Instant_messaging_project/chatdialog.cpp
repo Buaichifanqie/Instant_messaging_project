@@ -79,6 +79,8 @@ ChatDialog::ChatDialog(QWidget *parent)
 
     //设置聊天选中状态
     ui->side_chat_lb->SetSelected(true);
+
+    //为searchlist 设置search_edit
 }
 
 ChatDialog::~ChatDialog()

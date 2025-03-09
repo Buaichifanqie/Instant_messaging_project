@@ -10,20 +10,24 @@
 
 class SearchInfo{
 public:
-    SearchInfo(int uid,QString name,QString nick,QString desc,int sex);
+    SearchInfo(int uid,QString name,QString nick,QString desc,int sex,QString icon);
     int m_uid;
     QString m_name;
     QString m_nick;
     QString m_desc;
     int m_sex;
+    QString m_icon;
 };
 
 class AddFriendApply {
 public:
-    AddFriendApply(int from_uid, QString name, QString desc);
+    AddFriendApply(int from_uid, QString name, QString desc,QString icon,QString nick,int sex);
     int m_from_uid;
     QString m_name;
     QString m_desc;
+    QString m_icon;
+    QString m_nick;
+    int m_sex;
 };
 
 struct ApplyInfo {
