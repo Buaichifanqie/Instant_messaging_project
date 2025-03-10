@@ -1,4 +1,4 @@
-#ifndef TCPMGR_H
+ #ifndef TCPMGR_H
 #define TCPMGR_H
 #include <QTcpSocket>
 #include "singleton.h"
