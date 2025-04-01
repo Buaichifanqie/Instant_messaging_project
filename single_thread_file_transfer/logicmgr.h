@@ -1,41 +1,39 @@
 #ifndef LOGICMGR_H
 #define LOGICMGR_H
-
+#include "singleton.h"
+#include <functional>
+#include <QMap>
+#include <QJsonObject>
 #include <QObject>
 #include <QThread>
-#include <QMap>
-#include <functional>
-#include "tcpclient.h"
-#include "global.h"
-#include "Singleton.h"
 
-class LogicWorker:public QObject
-{
+class LogicWorker: public QObject{
     Q_OBJECT
 public:
-    explicit LogicWorker(QObject* parent=nullptr);
+    LogicWorker(QObject * parent = nullptr);
     void InitHandlers();
-    QMap<quint32, std::function<void(QJsonObject obj)> >m_handlers;
-
+private:
+    QMap<quint32, std::function<void(QJsonObject obj)>>_handlers;
 signals:
     void sig_trans_size(int trans_size);
 public slots:
     void slot_logic_process(quint16 msgid, QJsonObject obj);
 };
 
-class Logicmgr : public QObject,public Singleton<Logicmgr>
-{
+//QObject 放在前面
+class LogicMgr : public QObject, public Singleton<LogicMgr>
+{;
     Q_OBJECT
 public:
-    friend class Singleton<Logicmgr>;
-    ~Logicmgr();
+    friend class Singleton<LogicMgr>;
+    ~LogicMgr();
 private:
-    Logicmgr();
-    LogicWorker* m_worker;
-    QThread* m_work_thread;
+    LogicMgr();
+    LogicWorker* _worker;
+    QThread* _work_thread;
 signals:
     void sig_logic_process(quint16 msgid, QJsonObject obj);
     void sig_trans_size(int trans_size);
 };
 
-#endif //LOGICMGR_H
+#endif // LOGICMGR_H

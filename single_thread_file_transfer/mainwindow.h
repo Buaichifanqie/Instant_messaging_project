@@ -3,24 +3,20 @@
 
 #include <QMainWindow>
 
-QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
 }
-QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void initUi();
+    void initUI();
     void initSlots();
-    //启动延时操作
     void startDelay(int msecs);
-
 private slots:
     void on_fileBtn_clicked();
 
@@ -32,7 +28,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QString m_file_name;
-    QString m_file_md5;
+    QString _file_name;
+    QString _file_md5;
 };
+
 #endif // MAINWINDOW_H

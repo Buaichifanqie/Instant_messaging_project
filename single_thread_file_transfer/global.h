@@ -13,10 +13,10 @@
 
 enum MsgID
 {
-    ID_TEXT_MSG_REQ=1001, //测试消息
-    ID_TEXT_MSG_RES=1002, //测试消息回包
-    ID_UPLOAD_FILE_REQ=1003, //发送文件请求
-    ID_UPLOAD_FILE_RSP=1004, //发送文件回复
+    ID_TEST_MSG_REQ = 1001,       //测试消息
+    ID_TEST_MSG_RSP = 1002,       //测试消息回包
+    ID_UPLOAD_FILE_REQ = 1003,    //发送文件请求
+    ID_UPLOAD_FILE_RSP = 1004,    //发送文件回复
 };
 
 
