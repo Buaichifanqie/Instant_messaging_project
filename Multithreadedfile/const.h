@@ -1,16 +1,6 @@
 #pragma once
+#include <functional>
 
-#define MAX_LENGTH  1024*4
-//头部总长度
-#define HEAD_TOTAL_LEN 6
-//头部id长度
-#define HEAD_ID_LEN 2
-//头部数据长度
-#define HEAD_DATA_LEN 4
-// 接受队列最大个数
-#define MAX_RECVQUE  2000000
-// 发送队列最大个数
-#define MAX_SENDQUE 2000000
 
 enum ErrorCodes {
 	Success = 0,
@@ -27,20 +17,37 @@ enum ErrorCodes {
 	UidInvalid = 1011,  //uid无效
 };
 
+
 // Defer类
 class Defer {
 public:
 	// 接受一个lambda表达式或者函数指针
-	Defer(std::function<void()> func) : m_func(func) {}
+	Defer(std::function<void()> func) : func_(func) {}
 
 	// 析构函数中执行传入的函数
 	~Defer() {
-		m_func();
+		func_();
 	}
 
 private:
-	std::function<void()> m_func;
+	std::function<void()> func_;
 };
+
+#define MAX_LENGTH  1024*4
+//头部总长度
+#define HEAD_TOTAL_LEN 6
+//头部id长度
+#define HEAD_ID_LEN 2
+//头部数据长度
+#define HEAD_DATA_LEN 4
+#define MAX_RECVQUE  2000000
+#define MAX_SENDQUE 2000000
+
+//4个逻辑工作者
+#define LOGIC_WORKER_COUNT 4
+//4个文件工作者
+#define FILE_WORKER_COUNT 4
+
 
 enum MSG_IDS {
 	ID_TEST_MSG_REQ = 1001,       //测试消息
@@ -49,14 +56,11 @@ enum MSG_IDS {
 	ID_UPLOAD_FILE_RSP = 1004,    //发送文件回复
 };
 
-//逻辑工作者
-#define	LOGIC_WORKER_COUNT 4
-//文件工作者
-#define FILE_WORKER_COUNT 4
-
 #define USERIPPREFIX  "uip_"
 #define USERTOKENPREFIX  "utoken_"
 #define IPCOUNTPREFIX  "ipcount_"
 #define USER_BASE_INFO "ubaseinfo_"
 #define LOGIN_COUNT  "logincount"
 #define NAME_INFO  "nameinfo_"
+
+

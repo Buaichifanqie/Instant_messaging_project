@@ -1,18 +1,17 @@
-#include "AsioIOServicePool.h"
-
-AsioIOServicePool::AsioIOServicePool(std::size_t size) :m_ioServices(size), m_works(size), m_nextIOService(0)
-{
-	for (std::size_t i = 0; i < size; ++i)
-	{
-		//// ÎªÃ¿¸ö io_context ´´½¨Ò»¸ö¹¤×÷ÊØ»¤³ÌÐò
-		m_works[i] = std::make_unique<Work>(boost::asio::make_work_guard(m_ioServices[i]));
+ï»¿#include "AsioIOServicePool.h"
+#include <iostream>
+using namespace std;
+AsioIOServicePool::AsioIOServicePool(std::size_t size):_ioServices(size),
+_works(size), _nextIOService(0){
+	for (std::size_t i = 0; i < size; ++i) {
+		_works[i] = std::make_unique<Work>(boost::asio::make_work_guard(_ioServices[i]));
 	}
-	// ±éÀú¶à¸ö io_context£¬ÎªÃ¿¸ö io_context ´´½¨Ò»¸öÏß³Ì£¬²¢ÔÚÃ¿¸öÏß³ÌÖÐÔËÐÐ io_context
-	for (std::size_t i = 0; i < m_ioServices.size(); ++i)
-	{
-		m_threads.emplace_back([this,i]() {
-			m_ioServices[i].run();
-		});
+
+	//éåŽ†å¤šä¸ªioserviceï¼Œåˆ›å»ºå¤šä¸ªçº¿ç¨‹ï¼Œæ¯ä¸ªçº¿ç¨‹å†…éƒ¨å¯åŠ¨ioservice
+	for (std::size_t i = 0; i < _ioServices.size(); ++i) {
+		_threads.emplace_back([this, i]() {
+			_ioServices[i].run();
+			});
 	}
 }
 
@@ -20,28 +19,25 @@ AsioIOServicePool::~AsioIOServicePool() {
 	std::cout << "AsioIOServicePool destruct" << endl;
 }
 
-boost::asio::io_context& AsioIOServicePool::GetIOService()
-{
-	auto& service = m_ioServices[m_nextIOService++];
-	if (m_nextIOService == m_ioServices.size())
-	{
-		m_nextIOService = 0;
+boost::asio::io_context& AsioIOServicePool::GetIOService() {
+	auto& service = _ioServices[_nextIOService++];
+	if (_nextIOService == _ioServices.size()) {
+		_nextIOService = 0;
 	}
 	return service;
 }
 
-void AsioIOServicePool::Stop()
-{
-	for (auto& ioService : m_ioServices)
+void AsioIOServicePool::Stop(){
+	for (auto& ioService : _ioServices)
 	{
 		ioService.stop();
 	}
 
-	for (auto& work : m_works)
+	for (auto& work : _works)
 	{
 		work.reset();
 	}
-	for (auto& thread : m_threads)
+	for (auto& thread : _threads)
 	{
 		if (thread.joinable())
 		{
@@ -49,4 +45,3 @@ void AsioIOServicePool::Stop()
 		}
 	}
 }
-

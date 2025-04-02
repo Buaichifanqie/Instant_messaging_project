@@ -1,7 +1,9 @@
 #pragma once
 #include "Singleton.h"
+#include <queue>
 #include <thread>
 #include "CSession.h"
+#include <queue>
 #include <map>
 #include <functional>
 #include "const.h"
@@ -9,17 +11,17 @@
 #include <json/value.h>
 #include <json/reader.h>
 #include <unordered_map>
-#include "MyQueue.h"
 #include "LogicWorker.h"
-typedef std::function<void(std::shared_ptr<CSession>, const short& msg_id, const std::string& msg_data)> FunCallBack;
 
-class LogicSystem : public Singleton<LogicSystem> {
-    friend class Singleton<LogicSystem>;  // 关键：声明友元关系
+typedef  function<void(shared_ptr<CSession>, const short &msg_id, const string &msg_data)> FunCallBack;
+class LogicSystem:public Singleton<LogicSystem>
+{
+	friend class Singleton<LogicSystem>;
 public:
-    ~LogicSystem();
-    void PostMsgToQue(std::shared_ptr<LogicNode> msg,int index);
-
+	~LogicSystem();
+	void PostMsgToQue(shared_ptr < LogicNode> msg, int index);
 private:
-    LogicSystem();  // 私有构造函数
-    std::vector<std::shared_ptr<LogicWorker>> m_workers;    
+	LogicSystem();
+	std::vector<std::shared_ptr<LogicWorker> > _workers;
 };
+

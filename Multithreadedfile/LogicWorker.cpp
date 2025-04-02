@@ -2,75 +2,77 @@
 #include <json/json.h>
 #include <json/value.h>
 #include <json/reader.h>
-//#include "FileSystem.h"
+#include "FileSystem.h"
 #include "CSession.h"
 
-LogicWorker::LogicWorker()
+LogicWorker::LogicWorker():_b_stop(false)
 {
-	//注册回调函数
 	RegisterCallBacks();
-	m_work_thread = std::thread(
-		[this]() {
-			std::unique_lock<std::mutex> lock(m_mutex);
-			m_cv.wait(lock,
-				[this]()
-				{
-					if (m_b_stop)
-					{
-						return true;
-					}
-					if (m_task_que.empty())
-					{
-						return false;
-					}
+
+	_work_thread = std::thread([this]() {
+		while (!_b_stop) {
+			std::unique_lock<std::mutex> lock(_mtx);
+			_cv.wait(lock, [this]() {
+				if(_b_stop) {
 					return true;
-				});
-			if (m_b_stop)
-			{
+				}
+
+				if (_task_que.empty()) {
+					return false;
+				}
+
+				return true;
+
+			});
+
+			if (_b_stop) {
 				return;
 			}
-			auto task1 = m_task_que.front();
-			std::shared_ptr<LogicNode> task = *task1.release();
+
+			auto task = _task_que.front();
 			task_callback(task);
-			m_task_que.pop();
-		});
+			_task_que.pop();
+		}
+	});
+
 }
 
 LogicWorker::~LogicWorker()
 {
-	m_b_stop = true;
-	m_cv.notify_one();
-	m_work_thread.join();
+	_b_stop = true;
+	_cv.notify_one();
+	_work_thread.join();
 }
 
 void LogicWorker::PostTask(std::shared_ptr<LogicNode> task)
 {
-	//无锁队列不用加锁
-	m_task_que.push(task);
-	m_cv.notify_one();
+	std::lock_guard<std::mutex> lock(_mtx);
+	_task_que.push(task);
+	_cv.notify_one();
 }
 
 void LogicWorker::RegisterCallBacks()
 {
-	m_fun_callbacks[ID_TEST_MSG_REQ] = [this](shared_ptr<CSession> session, const short& msg_id, const string& msg_data)
-		{
+	_fun_callbacks[ID_TEST_MSG_REQ] = [this](shared_ptr<CSession> session, const short& msg_id,
+		const string& msg_data) {
 			Json::Reader reader;
 			Json::Value root;
 			reader.parse(msg_data, root);
 			auto data = root["data"].asString();
 			std::cout << "recv test data is  " << data << std::endl;
 
-			Json::Value rtvalue;	
-			Defer defer([this, &rtvalue, session]()
-				{
-					std::string return_str = rtvalue.toStyledString();
-					session->Send(return_str, ID_TEST_MSG_RSP);
+			Json::Value  rtvalue;
+			Defer defer([this, &rtvalue, session]() {
+				std::string return_str = rtvalue.toStyledString();
+				session->Send(return_str, ID_TEST_MSG_RSP);
 				});
+
 			rtvalue["error"] = ErrorCodes::Success;
 			rtvalue["data"] = data;
-		};
-	m_fun_callbacks[ID_UPLOAD_FILE_REQ] = [this](shared_ptr<CSession> session, const short& msg_id, const string& msg_data)
-		{
+	};
+
+	_fun_callbacks[ID_UPLOAD_FILE_REQ] = [this](shared_ptr<CSession> session, const short& msg_id,
+		const string& msg_data) {
 			Json::Reader reader;
 			Json::Value root;
 			reader.parse(msg_data, root);
@@ -80,17 +82,40 @@ void LogicWorker::RegisterCallBacks()
 			auto trans_size = root["trans_size"].asInt();
 			auto last = root["last"].asInt();
 			auto file_data = root["data"].asString();
-			Json::Value rtvalue;
-			Defer defer([this, &rtvalue, session]()
-				{
-					std::string return_str = rtvalue.toStyledString();
-					session->Send(return_str, ID_UPLOAD_FILE_RSP);
+			Json::Value  rtvalue;
+			Defer defer([this, &rtvalue, session]() {
+				std::string return_str = rtvalue.toStyledString();
+				session->Send(return_str, ID_UPLOAD_FILE_RSP);
 				});
 
+			// 使用 std::hash 对字符串进行哈希
 			std::hash<std::string> hash_fn;
-			size_t hash_value = hash_fn(name);
+			size_t hash_value = hash_fn(name); // 生成哈希值
 			int index = hash_value % FILE_WORKER_COUNT;
 			std::cout << "Hash value: " << hash_value << std::endl;
 
-		};
+			FileSystem::GetInstance()->PostMsgToQue(
+				std::make_shared<FileTask>(session, name, seq, total_size,
+					trans_size, last, file_data),
+				index
+			);
+
+			rtvalue["error"] = ErrorCodes::Success;
+			rtvalue["total_size"] = total_size;
+			rtvalue["seq"] = seq;
+			rtvalue["name"] = name;
+			rtvalue["trans_size"] = trans_size;
+			rtvalue["last"] = last;
+	};
+}
+
+void LogicWorker::task_callback(std::shared_ptr<LogicNode> task)
+{
+	cout << "recv_msg id  is " << task->_recvnode->_msg_id << endl;
+	auto call_back_iter = _fun_callbacks.find(task->_recvnode->_msg_id);
+	if (call_back_iter == _fun_callbacks.end()) {
+		return;
+	}
+	call_back_iter->second(task->_session, task->_recvnode->_msg_id,
+		std::string(task->_recvnode->_data, task->_recvnode->_cur_len));
 }

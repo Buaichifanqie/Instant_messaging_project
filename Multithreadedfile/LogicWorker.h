@@ -1,22 +1,22 @@
 #pragma once
 #include <thread>
+#include <mutex>
 #include <queue>
 #include <condition_variable>
 #include <memory>
 #include "MsgNode.h"
-#include <mutex>
 #include <unordered_map>
 
 class CSession;
-class LogicNode
-{
+class LogicNode {
 public:
 	LogicNode(std::shared_ptr<CSession>, std::shared_ptr<RecvNode>);
-	std::shared_ptr<CSession> m_session;
-	std::shared_ptr<RecvNode> m_recvnode;
+	shared_ptr<CSession> _session;
+	shared_ptr<RecvNode> _recvnode;
 };
 
-using FunCallBack = function<void(shared_ptr<CSession>, const short& msg_id, const string& msg_data)>;
+typedef  function<void(shared_ptr<CSession>, 
+	const short& msg_id, const string& msg_data)> FunCallBack;
 
 class LogicWorker
 {
@@ -27,10 +27,11 @@ public:
 	void RegisterCallBacks();
 private:
 	void task_callback(std::shared_ptr<LogicNode>);
-	std::mutex m_mutex;
-	std::thread m_work_thread;
-	MyQueue<std::shared_ptr<LogicNode>> m_task_que;
-	std::atomic<bool> m_b_stop;
-	std::condition_variable m_cv;
-	std::unordered_map<short, FunCallBack> m_fun_callbacks;	
+	std::thread _work_thread;
+	std::queue<std::shared_ptr<LogicNode>> _task_que;
+	std::atomic<bool> _b_stop;
+	std::mutex  _mtx;
+	std::condition_variable _cv;
+	std::unordered_map<short, FunCallBack> _fun_callbacks;
 };
+

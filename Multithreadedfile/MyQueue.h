@@ -2,6 +2,8 @@
 #include<atomic>
 #include<memory>
 #include <cassert>
+#include <functional>  
+#include <vector>   
 
 // 无锁队列模板类
 template<typename T>
@@ -152,7 +154,7 @@ public:
 	// 入队操作
 	void push(T new_value)
 	{
-		std::unique_ptr<T> new_data(new T(new_value)); // 创建新数据
+		std::unique_ptr<T> new_data = std::make_unique<T>(std::move(new_value));  // 创建新数据
 		counted_node_ptr new_next;
 		new_next.ptr = new node; // 创建新节点
 		new_next.external_count = 1;
@@ -195,7 +197,7 @@ public:
 		construct_count++; // 增加构造计数（用于调试）
 	}
 
-	std::unique_ptr<T>front() {
+	std::unique_ptr<T> front() {
 		counted_node_ptr old_head = head.load(std::memory_order_relaxed);
 		for (;;) {
 			increase_external_count(head, old_head); // 增加头节点的外部引用计数
@@ -275,8 +277,182 @@ public:
 };
 
 // 初始化静态计数器
+// 在类外初始化静态成员
 template<typename T>
 std::atomic<int> MyQueue<T>::destruct_count = 0;
 
 template<typename T>
 std::atomic<int> MyQueue<T>::construct_count = 0;
+
+
+
+//#pragma once
+//#include <atomic>
+//#include <memory>
+//#include <cassert>
+//
+//template<typename T>
+//class LockFreeQueue {
+//private:
+//    struct Node;
+//
+//    struct Pointer {
+//        Node* ptr;
+//        unsigned external_count;
+//    };
+//
+//    struct Node {
+//        std::atomic<T*> data;
+//        std::atomic<Pointer> next;
+//        std::atomic<unsigned> internal_count;
+//
+//        Node() : data(nullptr), internal_count(0) {
+//            Pointer next_node;
+//            next_node.ptr = nullptr;
+//            next_node.external_count = 0;
+//            next.store(next_node);
+//        }
+//
+//        void release_ref() {
+//            if (internal_count.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+//                delete this;
+//            }
+//        }
+//    };
+//
+//    std::atomic<Pointer> head;
+//    std::atomic<Pointer> tail;
+//
+//    static void increase_external_count(std::atomic<Pointer>& counter,
+//        Pointer& old_ptr) {
+//        Pointer new_ptr;
+//        do {
+//            new_ptr = old_ptr;
+//            ++new_ptr.external_count;
+//        } while (!counter.compare_exchange_strong(
+//            old_ptr, new_ptr,
+//            std::memory_order_acquire,
+//            std::memory_order_relaxed));
+//    }
+//
+//    static void free_external_counter(Pointer& old_ptr) {
+//        Node* const ptr = old_ptr.ptr;
+//        if (ptr->internal_count.fetch_add(
+//            old_ptr.external_count - 2,
+//            std::memory_order_release) ==
+//            (unsigned)(-old_ptr.external_count + 2)) {
+//            delete ptr;
+//        }
+//    }
+//
+//public:
+//    LockFreeQueue() {
+//        Node* dummy = new Node;
+//        Pointer init_ptr;
+//        init_ptr.ptr = dummy;
+//        init_ptr.external_count = 1;
+//        head.store(init_ptr);
+//        tail.store(init_ptr);
+//    }
+//
+//    ~LockFreeQueue() {
+//        while (pop());
+//        Pointer h = head.load();
+//        delete h.ptr;
+//    }
+//
+//    void push(T new_value) {
+//        std::unique_ptr<T> new_data(new T(std::move(new_value)));
+//        Pointer new_next;
+//        new_next.ptr = new Node;
+//        new_next.external_count = 1;
+//
+//        Pointer old_tail = tail.load();
+//
+//        while (true) {
+//            increase_external_count(tail, old_tail);
+//
+//            T* old_data = nullptr;
+//            if (old_tail.ptr->data.compare_exchange_strong(
+//                old_data, new_data.get())) {
+//
+//                Pointer old_next;
+//                old_next.ptr = nullptr;
+//                old_next.external_count = 0;
+//
+//                if (!old_tail.ptr->next.compare_exchange_strong(
+//                    old_next, new_next)) {
+//                    delete new_next.ptr;
+//                    new_next = old_next;
+//                }
+//
+//                Pointer new_tail;
+//                new_tail.ptr = new_next.ptr;
+//                new_tail.external_count = 1;
+//
+//                if (tail.compare_exchange_strong(old_tail, new_tail)) {
+//                    free_external_counter(old_tail);
+//                }
+//                else {
+//                    new_next.ptr->release_ref();
+//                }
+//
+//                new_data.release();
+//                return;
+//            }
+//            else {
+//                Pointer next = old_tail.ptr->next.load();
+//                if (next.ptr == nullptr) {
+//                    if (old_tail.ptr->next.compare_exchange_strong(
+//                        next, new_next)) {
+//                        next = new_next;
+//                    }
+//                    else {
+//                        delete new_next.ptr;
+//                    }
+//                }
+//
+//                Pointer new_tail;
+//                new_tail.ptr = next.ptr;
+//                new_tail.external_count = 1;
+//
+//                if (tail.compare_exchange_strong(old_tail, new_tail)) {
+//                    free_external_counter(old_tail);
+//                }
+//                else {
+//                    next.ptr->release_ref();
+//                }
+//            }
+//        }
+//    }
+//
+//    std::unique_ptr<T> pop() {
+//        Pointer old_head = head.load();
+//
+//        while (true) {
+//            increase_external_count(head, old_head);
+//            Node* const current = old_head.ptr;
+//
+//            if (current == tail.load().ptr) {
+//                current->release_ref();
+//                return std::unique_ptr<T>();
+//            }
+//
+//            Pointer next = current->next.load();
+//
+//            if (head.compare_exchange_strong(old_head, next)) {
+//                T* res = current->data.exchange(nullptr);
+//                free_external_counter(old_head);
+//                return std::unique_ptr<T>(res);
+//            }
+//
+//            current->release_ref();
+//        }
+//    }
+//
+//    bool empty() const {
+//        Pointer h = head.load();
+//        Pointer t = tail.load();
+//        return h.ptr == t.ptr;
+//    }
+//};

@@ -5,53 +5,39 @@
 #include <boost/asio.hpp>
 using namespace std;
 using boost::asio::ip::tcp;
-
+class LogicSystem;
 class MsgNode
 {
 public:
-	MsgNode(int max_len) :m_total_len(max_len), m_cur_len(0)
-	{
-		m_data = new char[m_total_len + 1];
-		m_data[m_total_len] = '\0';
+	MsgNode(int max_len) :_total_len(max_len), _cur_len(0) {
+		_data = new char[_total_len + 1]();
+		_data[_total_len] = '\0';
 	}
 
-	~MsgNode()
-	{
-		std::cout << "destruct MsgNode" << std::endl;
-		delete[] m_data;
+	~MsgNode() {
+		std::cout << "destruct MsgNode" << endl;
+		delete[] _data;
 	}
 
-	void Clear()
-	{
-		::memset(m_data, 0, m_total_len);
-		m_cur_len = 0;
+	void Clear() {
+		::memset(_data, 0, _total_len);
+		_cur_len = 0;
 	}
 
-	int m_cur_len;
-	int m_total_len;
-	char* m_data;
+	int _cur_len;
+	int _total_len;
+	char* _data;
 };
 
-//接收消息节点
-class RecvNode :public MsgNode
-{
-	friend class LogicSystem;
+class RecvNode :public MsgNode {
 public:
-	RecvNode(int max_len, short msg_id) :MsgNode(max_len), m_msg_id(msg_id) {}
-private:
-	short m_msg_id;
+	RecvNode(int max_len, short msg_id);
+	short _msg_id;
 };
 
-//发送消息节点
-class SendNode :public MsgNode
-{
-	friend class LogicSystem;
+class SendNode:public MsgNode {
 public:
-	SendNode(const char* msg, int max_len, short msg_id) :MsgNode(max_len), m_msg_id(msg_id)
-	{
-		memcpy(m_data, msg, max_len);
-		m_cur_len = max_len;
-	}
-private:
-	short m_msg_id;
+	SendNode(const char* msg,int max_len, short msg_id);
+	short _msg_id;
 };
+
