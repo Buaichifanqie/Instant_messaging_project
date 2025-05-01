@@ -37,6 +37,7 @@ enum ReqId{
     ID_TEXT_CHAT_MSG_REQ  = 1017,  //文本聊天信息请求
     ID_TEXT_CHAT_MSG_RSP  = 1018,  //文本聊天信息回复
     ID_NOTIFY_TEXT_CHAT_MSG_REQ = 1019, //通知用户文本聊天信息
+    ID_NOTIFY_OFF_LINE_REQ = 1021,//通知用户下线
 };
 
 enum ErrorCodes{
@@ -118,17 +119,17 @@ const int  tip_offset = 5;
 
 
 const std::vector<QString>  strs ={"hello world !",
-                                   "nice to meet u",
-                                   "New year，new life",
-                                   "You have to love yourself",
-                                   "My love is written in the wind ever since the whole world is you"};
+                             "nice to meet u",
+                             "New year，new life",
+                            "You have to love yourself",
+                            "My love is written in the wind ever since the whole world is you"};
 
 const std::vector<QString> heads = {
-    ":/rec/head_1.jpg",
-    ":/rec/head_2.jpg",
-    ":/rec/head_3.jpg",
-    ":/rec/head_4.jpg",
-    ":/rec/head_5.jpg"
+    ":/res/head_1.jpg",
+    ":/res/head_2.jpg",
+    ":/res/head_3.jpg",
+    ":/res/head_4.jpg",
+    ":/res/head_5.jpg"
 };
 
 const std::vector<QString> names = {
@@ -143,5 +144,6 @@ const std::vector<QString> names = {
 };
 
 const int CHAT_COUNT_PER_PAGE = 13;
+
 
 #endif // GLOBAL_H
