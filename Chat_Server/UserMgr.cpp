@@ -24,19 +24,23 @@ void UserMgr::SetUserSession(int uid, std::shared_ptr<CSession> session)
 	_uid_to_session[uid] = session;
 }
 
-void UserMgr::RmvUserSession(int uid)
-{ 
-	auto uid_str = std::to_string(uid);
-	//ÒòÎªÔÙ´ÎµÇÂ¼¿ÉÄÜÊÇÆäËû·şÎñÆ÷£¬ËùÒÔ»áÔì³É±¾·şÎñÆ÷É¾³ıkey£¬ÆäËû·şÎñÆ÷×¢²ákeyµÄÇé¿ö
-	// ÓĞ¿ÉÄÜÆäËû·şÎñµÇÂ¼£¬±¾·şÉ¾³ıkeyÔì³ÉÕÒ²»µ½keyµÄÇé¿ö
-	
-	//RedisMgr::GetInstance()->Del(USERIPPREFIX + uid_str);
+void UserMgr::RmvUserSession(int uid, std::string session_id)//sessionæ˜¯åœ¨redisä¸­å­˜å‚¨çš„
+{
 
 	{
 		std::lock_guard<std::mutex> lock(_session_mtx);
+		auto iter = _uid_to_session.find(uid);
+		if (iter != _uid_to_session.end()) {
+			return;
+		}
+
+		auto session_id2 = iter->second->GetSessionId();
+		if (session_id != session_id2)//ä¸ç›¸ç­‰è¯´æ˜åœ¨å…¶å®ƒåœ°æ–¹ç™»å½•äº†
+		{
+			return;
+		}
 		_uid_to_session.erase(uid);
 	}
-
 }
 
 UserMgr::UserMgr()

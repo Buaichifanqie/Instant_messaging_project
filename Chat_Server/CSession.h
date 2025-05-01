@@ -38,6 +38,10 @@ public:
 	std::shared_ptr<CSession> SharedSelf();
 	void AsyncReadBody(int length);
 	void AsyncReadHead(int total_len);
+	void NotifyOffline(int uid);
+
+	//å¤„ç†å¼‚å¸¸è¿æ¥
+	void DealExceptionSession();
 private:
 	void asyncReadFull(std::size_t maxLength, std::function<void(const boost::system::error_code& , std::size_t)> handler);
 	void asyncReadLen(std::size_t  read_len, std::size_t total_len,
@@ -52,10 +56,10 @@ private:
 	bool _b_close;
 	std::queue<shared_ptr<SendNode> > _send_que;
 	std::mutex _send_lock;
-	//ÊÕµ½µÄÏûÏ¢½á¹¹
+	//æ”¶åˆ°çš„æ¶ˆæ¯ç»“æ„
 	std::shared_ptr<RecvNode> _recv_msg_node;
 	bool _b_head_parse;
-	//ÊÕµ½µÄÍ·²¿½á¹¹
+	//æ”¶åˆ°çš„å¤´éƒ¨ç»“æ„
 	std::shared_ptr<MsgNode> _recv_head_node;
 	int _user_uid;
 };
