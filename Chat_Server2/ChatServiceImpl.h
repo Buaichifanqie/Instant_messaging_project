@@ -4,6 +4,9 @@
 #include "message.pb.h"
 #include <mutex>
 #include "data.h"
+#include "message.pb.h"
+#include "CServer.h"
+using namespace message;
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -21,6 +24,7 @@ using message::TextChatMsgRsp;
 using message::TextChatData;
 
 
+
 class ChatServiceImpl final: public ChatService::Service
 {
 public:
@@ -36,6 +40,13 @@ public:
 
 	bool GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo>& userinfo);
 
+	//接受RPC踢人请求
+	Status NotifyKickUser(::grpc::ServerContext* context,
+		const KickUserReq* request, KickUserRsp* reply) override;
+
+	void RegisterServer(std::shared_ptr<CServer> pServer);
 private:
+
+	std::shared_ptr<CServer> _p_server;
 };
 

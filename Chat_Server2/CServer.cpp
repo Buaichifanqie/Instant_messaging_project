@@ -32,16 +32,37 @@ void CServer::StartAccept() {
 	_acceptor.async_accept(new_session->GetSocket(), std::bind(&CServer::HandleAccept, this, new_session, placeholders::_1));
 }
 
-void CServer::ClearSession(std::string uuid) {
-	
-	if (_sessions.find(uuid) != _sessions.end()) {
-		//ÒÆ³ıÓÃ»§ºÍsessionµÄ¹ØÁª
-		UserMgr::GetInstance()->RmvUserSession(_sessions[uuid]->GetUserId());
-	}
+void CServer::ClearSession(std::string session_id) {
+	//lock_guard<mutex> lock(_mutex);
+	std::cout << "session_id------------------" << session_id << std::endl;
+	std::cout << "_session+++++++++++++" << _sessions.empty() << std::endl;
+	if (_sessions.find(session_id) != _sessions.end()) {
+		auto uid = _sessions[session_id]->GetUserId();
 
-	{
-		lock_guard<mutex> lock(_mutex);
-		_sessions.erase(uuid);
+		//ç§»é™¤ç”¨æˆ·å’Œsessionçš„å…³è”
+		UserMgr::GetInstance()->RmvUserSession(uid, session_id);
 	}
+	_sessions.erase(session_id);
 	
+}
+
+//æ ¹æ®ç”¨æˆ·è·å–session
+shared_ptr<CSession> CServer::GetSession(std::string uuid)
+{
+	auto iter = _sessions.find(uuid);
+	if (iter != _sessions.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+
+bool CServer::CheckValid(std::string uuid)
+{
+	auto iter = _sessions.find(uuid);
+	if (iter != _sessions.end())
+	{
+		return true;
+	}
+	return false;
 }

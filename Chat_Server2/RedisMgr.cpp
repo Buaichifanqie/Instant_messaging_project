@@ -1,6 +1,102 @@
 #include "RedisMgr.h"
 #include "const.h"
 #include "ConfigMgr.h"
+#include "DistLock.h"
+std::string RedisMgr::acquireLock(const std::string& lockName, int lockTimeout, int aquireTimeout)
+{
+	auto connect = _con_pool->getConnection();
+	if (connect == nullptr) {
+		return std::string();
+	}
+
+	Defer defer([&connect, this]() {
+		_con_pool->returnConnection(connect);
+	});
+	return DistLock::Inst().acquireLock(connect, lockName, lockTimeout, aquireTimeout);
+}
+bool RedisMgr::releaseLock(const std::string& lockName, const std::string& identifier)
+{
+	if (identifier.empty()) {
+		return true;
+	}
+
+	auto connect = _con_pool->getConnection();
+	if (connect == nullptr) {
+		return false;
+	}
+
+	Defer defer([&connect, this]() {
+		_con_pool->returnConnection(connect);
+	});
+
+	return DistLock::Inst().releaseLock(connect,lockName, identifier);
+}
+void RedisMgr::IncreaseCount(std::string server_name)
+{
+	auto lock_key = LOCK_COUNT;
+	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
+	//åˆ©ç”¨deferè§£é”
+	Defer defer2([this, identifier, lock_key]() {
+		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
+		});
+
+	//å°†ç™»å½•æ•°é‡å¢žåŠ 
+	auto rd_res = RedisMgr::GetInstance()->HGet(LOGIN_COUNT, server_name);
+	int count = 0;
+	if (!rd_res.empty()) {
+		count = std::stoi(rd_res);
+	}
+
+	count++;
+	auto count_str = std::to_string(count);
+	RedisMgr::GetInstance()->HSet(LOGIN_COUNT, server_name, count_str);
+}
+void RedisMgr::DecreaseCount(std::string server_name)
+{
+	auto lock_key = LOCK_COUNT;
+	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
+	//åˆ©ç”¨deferè§£é”
+	Defer defer2([this, identifier, lock_key]() {
+		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
+		});
+
+	//å°†ç™»å½•æ•°é‡å‡å°‘
+	auto rd_res = RedisMgr::GetInstance()->HGet(LOGIN_COUNT, server_name);
+	int count = 0;
+	if (!rd_res.empty()) {
+		count = std::stoi(rd_res);
+		if (count > 0) {
+			count--;
+		}
+
+	}
+
+	auto count_str = std::to_string(count);
+	RedisMgr::GetInstance()->HSet(LOGIN_COUNT, server_name, count_str);
+}
+void RedisMgr::InitCount(std::string server_name)
+{
+	auto lock_key = LOCK_COUNT;
+	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
+	//åˆ©ç”¨deferè§£é”
+	Defer defer2([this, identifier, lock_key]() {
+		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
+		});
+
+	RedisMgr::GetInstance()->HSet(LOGIN_COUNT, server_name, "0");
+}
+void RedisMgr::DelCount(std::string server_name)
+{
+	auto lock_key = LOCK_COUNT;
+	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key, LOCK_TIME_OUT, ACQUIRE_TIME_OUT);
+	//åˆ©ç”¨deferè§£é”
+	Defer defer2([this, identifier, lock_key]() {
+		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);
+		});
+
+	RedisMgr::GetInstance()->HDel(LOGIN_COUNT, server_name);
+}
+
 RedisMgr::RedisMgr() {
 	auto& gCfgMgr = ConfigMgr::Inst();
 	auto host = gCfgMgr["Redis"]["Host"];
@@ -45,14 +141,14 @@ bool RedisMgr::Get(const std::string& key, std::string& value)
 }
 
 bool RedisMgr::Set(const std::string &key, const std::string &value){
-	//Ö´ÐÐredisÃüÁîÐÐ
+	//æ‰§è¡Œrediså‘½ä»¤è¡Œ
 	auto connect = _con_pool->getConnection();
 	if (connect == nullptr) {
 		return false;
 	}
 	auto reply = (redisReply*)redisCommand(connect, "SET %s %s", key.c_str(), value.c_str());
 
-	//Èç¹û·µ»ØNULLÔòËµÃ÷Ö´ÐÐÊ§°Ü
+	//å¦‚æžœè¿”å›žNULLåˆ™è¯´æ˜Žæ‰§è¡Œå¤±è´¥
 	if (NULL == reply)
 	{
 		std::cout << "Execut command [ SET " << key << "  "<< value << " ] failure ! " << std::endl;
@@ -61,7 +157,7 @@ bool RedisMgr::Set(const std::string &key, const std::string &value){
 		return false;
 	}
 
-	//Èç¹ûÖ´ÐÐÊ§°ÜÔòÊÍ·ÅÁ¬½Ó
+	//å¦‚æžœæ‰§è¡Œå¤±è´¥åˆ™é‡Šæ”¾è¿žæŽ¥
 	if (!(reply->type == REDIS_REPLY_STATUS && (strcmp(reply->str, "OK") == 0 || strcmp(reply->str, "ok") == 0)))
 	{
 		std::cout << "Execut command [ SET " << key << "  " << value << " ] failure ! " << std::endl;
@@ -70,7 +166,7 @@ bool RedisMgr::Set(const std::string &key, const std::string &value){
 		return false;
 	}
 
-	//Ö´ÐÐ³É¹¦ ÊÍ·ÅredisCommandÖ´ÐÐºó·µ»ØµÄredisReplyËùÕ¼ÓÃµÄÄÚ´æ
+	//æ‰§è¡ŒæˆåŠŸ é‡Šæ”¾redisCommandæ‰§è¡ŒåŽè¿”å›žçš„redisReplyæ‰€å ç”¨çš„å†…å­˜
 	freeReplyObject(reply);
 	std::cout << "Execut command [ SET " << key << "  " << value << " ] success ! " << std::endl;
 	_con_pool->returnConnection(connect);
