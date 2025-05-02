@@ -33,7 +33,9 @@ void CServer::StartAccept() {
 }
 
 void CServer::ClearSession(std::string session_id) {
-	lock_guard<mutex> lock(_mutex);
+	//lock_guard<mutex> lock(_mutex);
+	std::cout << "session_id------------------" << session_id << std::endl;
+	std::cout << "_session+++++++++++++" << _sessions.empty() << std::endl;
 	if (_sessions.find(session_id) != _sessions.end()) {
 		auto uid = _sessions[session_id]->GetUserId();
 
@@ -42,4 +44,25 @@ void CServer::ClearSession(std::string session_id) {
 	}
 	_sessions.erase(session_id);
 	
+}
+
+//根据用户获取session
+shared_ptr<CSession> CServer::GetSession(std::string uuid)
+{
+	auto iter = _sessions.find(uuid);
+	if (iter != _sessions.end())
+	{
+		return iter->second;
+	}
+	return nullptr;
+}
+
+bool CServer::CheckValid(std::string uuid)
+{
+	auto iter = _sessions.find(uuid);
+	if (iter != _sessions.end())
+	{
+		return true;
+	}
+	return false;
 }

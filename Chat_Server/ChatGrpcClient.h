@@ -11,6 +11,7 @@
 #include <json/json.h>
 #include <json/value.h>
 #include <json/reader.h>
+using namespace message;
 
 using grpc::Channel;
 using grpc::Status;
@@ -61,7 +62,7 @@ public:
 			}
 			return !connections_.empty();
 			});
-		//如果停止则直接返回空指针
+		//濡傛灉鍋滄鍒欑洿鎺ヨ繑鍥炵┖鎸囬拡
 		if (b_stop_) {
 			return  nullptr;
 		}
@@ -106,6 +107,7 @@ public:
 	AuthFriendRsp NotifyAuthFriend(std::string server_ip, const AuthFriendReq& req);
 	bool GetBaseInfo(std::string base_key, int uid, std::shared_ptr<UserInfo>& userinfo);
 	TextChatMsgRsp NotifyTextChatMsg(std::string server_ip, const TextChatMsgReq& req, const Json::Value& rtvalue);
+	KickUserRsp NotifyKickUser(std::string server_ip, const KickUserReq& req);
 private:
 	ChatGrpcClient();
 	unordered_map<std::string, std::unique_ptr<ChatConPool>> _pools;	

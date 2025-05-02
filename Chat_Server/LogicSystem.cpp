@@ -1,10 +1,11 @@
-#include "LogicSystem.h"
+﻿#include "LogicSystem.h"
 #include "StatusGrpcClient.h"
 #include "MysqlMgr.h"
 #include "const.h"
 #include "RedisMgr.h"
 #include "UserMgr.h"
 #include "ChatGrpcClient.h"
+using namespace message;
 
 using namespace std;
 
@@ -27,6 +28,11 @@ void LogicSystem::PostMsgToQue(shared_ptr < LogicNode> msg) {
 		unique_lk.unlock();
 		_consume.notify_one();
 	}
+}
+
+void LogicSystem::SetServer(std::shared_ptr<CServer> pserver)
+{
+	_p_server = pserver;
 }
 
 void LogicSystem::DealMsg() {
@@ -202,6 +208,10 @@ void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id
 		else
 		{
 			//如果不是同一台服务器 通知grpc让他通知其它服务器将其踢掉
+			//发送通知
+			KickUserReq kick_req;
+			kick_req.set_uid(uid);
+			ChatGrpcClient::GetInstance()->NotifyKickUser(uid_ip_value, kick_req);
 		}
 	}
 

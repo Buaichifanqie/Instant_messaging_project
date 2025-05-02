@@ -138,6 +138,13 @@ void CSession::AsyncReadHead(int total_len)
 				return;
 			}
 
+			//判断连接无效
+			if (!_server->CheckValid(_session_id))
+			{
+				Close();
+				return;
+			}
+			 
 			_recv_head_node->Clear();
 			memcpy(_recv_head_node->_data, _data, bytes_transfered);
 

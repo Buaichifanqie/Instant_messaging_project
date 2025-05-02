@@ -21,6 +21,7 @@ class LogicSystem :public Singleton<LogicSystem>
 public:
 	~LogicSystem();
 	void PostMsgToQue(shared_ptr < LogicNode> msg);
+	void SetServer(std::shared_ptr<CServer> pserver);
 private:
 	LogicSystem();
 	void DealMsg();
