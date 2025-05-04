@@ -75,6 +75,7 @@ void CSession::Send(char* msg, short max_length, short msgid) {
 }
 
 void CSession::Close() {
+	std::lock_guard<std::mutex> lock(_session_mtx);
 	_socket.close();
 	_b_close = true;
 }
@@ -103,6 +104,12 @@ void CSession::AsyncReadBody(int total_len)
 				return;
 			}
 
+			if (!_server->CheckValid(_session_id))
+			{
+				Close();
+				return;
+			}
+
 			memcpy(_recv_msg_node->_data , _data , bytes_transfered);
 			_recv_msg_node->_cur_len += bytes_transfered;
 			_recv_msg_node->_data[_recv_msg_node->_total_len] = '\0';
@@ -111,6 +118,9 @@ void CSession::AsyncReadBody(int total_len)
 			LogicSystem::GetInstance()->PostMsgToQue(make_shared<LogicNode>(shared_from_this(), _recv_msg_node));
 			//继续监听头部接受事件
 			AsyncReadHead(HEAD_TOTAL_LEN);
+
+			//更新心跳
+			UpdateHeartTime();
 		}
 		catch (std::exception& e) {
 			std::cout << "Exception code is " << e.what() << endl;
@@ -145,6 +155,8 @@ void CSession::AsyncReadHead(int total_len)
 				return;
 			}
 			 
+			
+
 			_recv_head_node->Clear();
 			memcpy(_recv_head_node->_data, _data, bytes_transfered);
 
@@ -175,6 +187,9 @@ void CSession::AsyncReadHead(int total_len)
 
 			_recv_msg_node = make_shared<RecvNode>(msg_len, msg_id);
 			AsyncReadBody(msg_len);
+
+			//更新心跳
+			UpdateHeartTime();
 		}
 		catch (std::exception& e) {
 			std::cout << "Exception code is " << e.what() << endl;
@@ -192,6 +207,22 @@ void CSession::NotifyOffline(int uid)
 
 	Send(return_str, ID_NOTIFY_OFF_LINE_REQ);
 	return;
+}
+
+bool CSession::IsHeartbeatExpired(std::time_t& now)
+{
+	double diff_sec = std::difftime(now, _last_heart_time);
+	if (diff_sec > HEART_TIME_OUT) {
+		std::cout << "session: " << _session_id << " heart time out, diff sec is " << diff_sec << endl;
+		return true;
+	}
+	return false;
+}
+
+void CSession::UpdateHeartTime()
+{
+	time_t now = time(nullptr);
+	_last_heart_time = now;
 }
 
 void CSession::HandleWrite(const boost::system::error_code& error, std::shared_ptr<CSession> shared_self) {

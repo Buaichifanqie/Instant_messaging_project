@@ -90,7 +90,8 @@ void LogicSystem::RegisterCallBacks() {
 
 	_fun_callbacks[ID_TEXT_CHAT_MSG_REQ] = std::bind(&LogicSystem::DealChatTextMsg, this,
 		placeholders::_1, placeholders::_2, placeholders::_3);
-	
+	_fun_callbacks[ID_HEARTBEAT_REQ] = std::bind(&LogicSystem::HeartBeatHandler, this,
+		placeholders::_1, placeholders::_2, placeholders::_3);
 }
 
 void LogicSystem::LoginHandler(shared_ptr<CSession> session, const short &msg_id, const string &msg_data) {
@@ -495,6 +496,19 @@ void LogicSystem::DealChatTextMsg(std::shared_ptr<CSession> session, const short
 
 	//发送通知 todo...
 	ChatGrpcClient::GetInstance()->NotifyTextChatMsg(to_ip_value, text_msg_req, rtvalue);
+}
+
+void LogicSystem::HeartBeatHandler(std::shared_ptr<CSession> session, const short& msg_id, const string& msg_data)
+{
+	//测试打印一下
+	Json::Reader reader;
+	Json::Value root;
+	reader.parse(msg_data, root);
+	auto uid = root["fromuid"].asInt();		    
+	std::cout << "recive heart beat from uid is " << uid << std::endl;
+	Json::Value rtvalue;
+	rtvalue["error"] = ErrorCodes::Success;
+	session->Send(rtvalue.toStyledString(), ID_HEARTBEAT_RSP);
 }
 
 

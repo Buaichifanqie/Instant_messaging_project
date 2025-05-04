@@ -4,6 +4,8 @@
 #include <memory.h>
 #include <map>
 #include <mutex>
+#include "RedisMgr.h"
+#include "ConfigMgr.h"
 using namespace std;
 using boost::asio::ip::tcp;
 class CServer
@@ -15,7 +17,7 @@ public:
 	shared_ptr<CSession> GetSession(std::string);
 	bool CheckValid(std::string);
 
-	//void on_timer(const boost::system::error_code& ec);
+	void on_timer(const boost::system::error_code& ec);
 
 private:
 	void HandleAccept(shared_ptr<CSession>, const boost::system::error_code & error);
@@ -25,5 +27,6 @@ private:
 	tcp::acceptor _acceptor;
 	std::map<std::string, shared_ptr<CSession>> _sessions;
 	std::mutex _mutex;
+	boost::asio::steady_timer _timer; 
 };
 

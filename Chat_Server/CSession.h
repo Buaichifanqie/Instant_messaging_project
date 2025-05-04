@@ -39,6 +39,8 @@ public:
 	void AsyncReadBody(int length);
 	void AsyncReadHead(int total_len);
 	void NotifyOffline(int uid);
+	bool IsHeartbeatExpired(std::time_t& now);
+	void UpdateHeartTime();
 
 	//处理异常连接
 	void DealExceptionSession();
@@ -62,6 +64,11 @@ private:
 	//收到的头部结构
 	std::shared_ptr<MsgNode> _recv_head_node;
 	int _user_uid;
+
+	//记录接受上次数据的时间
+	std::atomic<time_t> _last_heart_time;
+	//session锁
+	std::mutex _session_mtx; 
 };
 
 class LogicNode {

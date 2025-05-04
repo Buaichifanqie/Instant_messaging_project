@@ -3,9 +3,13 @@
 #include "AsioIOServicePool.h"
 #include "UserMgr.h"
 CServer::CServer(boost::asio::io_context& io_context, short port):_io_context(io_context), _port(port),
-_acceptor(io_context, tcp::endpoint(tcp::v4(),port))
+_acceptor(io_context, tcp::endpoint(tcp::v4(),port)),_timer(_io_context,std::chrono::seconds(60))
 {
 	cout << "Server start success, listen on port : " << _port << endl;
+	//_timer.async_wait(std::bind(&CServer::on_timer, this, placeholders::_1));
+	_timer.async_wait([this](boost::system::error_code e){
+		on_timer(e);
+	});
 	StartAccept();
 }
 
@@ -57,12 +61,58 @@ shared_ptr<CSession> CServer::GetSession(std::string uuid)
 	return nullptr;
 }
 
-bool CServer::CheckValid(std::string uuid)
+bool CServer::CheckValid(std::string sid)
 {
-	auto iter = _sessions.find(uuid);
+	lock_guard<mutex> lock(_mutex);
+	auto iter = _sessions.find(sid);
 	if (iter != _sessions.end())
 	{
 		return true;
 	}
 	return false;
+}
+
+void CServer::on_timer(const boost::system::error_code& ec)
+{
+	std::vector<std::shared_ptr<CSession>> _expired_sessions;
+	int session_count = 0;
+
+	{
+		lock_guard<mutex> lock(_mutex);
+		time_t now = time(nullptr);
+		for (auto iter = _sessions.begin(); iter != _sessions.end(); ++iter)
+		{
+			auto b_expired = iter->second->IsHeartbeatExpired(now);
+			if (b_expired)
+			{
+				iter->second->Close();
+				//收集过期时间
+				_expired_sessions.push_back(iter->second);
+				session_count++;
+			}
+			else
+			{
+				session_count++;
+
+			}
+		}
+	}
+	
+	//设置session数量
+	auto& cfg = ConfigMgr::Inst();
+	auto self_name = cfg["SelfServer"]["Name"];
+	auto count_str = std::to_string(session_count);
+	RedisMgr::GetInstance()->HSet(LOGIN_COUNT, self_name, count_str);
+
+
+	//处理过期session
+	for (auto& session : _expired_sessions)
+	{
+		session->DealExceptionSession();
+	}
+
+	//再设置下一个60s检测
+	_timer.async_wait([this](boost::system::error_code e) {
+		on_timer(e);
+	});
 }
