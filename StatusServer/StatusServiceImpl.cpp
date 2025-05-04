@@ -61,11 +61,11 @@ ChatServer StatusServiceImpl::getChatServer() {
 
 	//加分布式锁
 	auto lock_key = LOCK_COUNT;
-	auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key,LOCK_TIME_OUT,ACQUIRE_TIME_OUT);
-	//利用defer解锁
-	Defer defer2([this,identifier,lock_key]() {
-		RedisMgr::GetInstance()->releaseLock(lock_key, identifier);   
-	});
+	//auto identifier = RedisMgr::GetInstance()->acquireLock(lock_key,LOCK_TIME_OUT,ACQUIRE_TIME_OUT);
+	////利用defer解锁
+	//Defer defer2([this,identifier,lock_key]() {
+	//	RedisMgr::GetInstance()->releaseLock(lock_key, identifier);   
+	//});
 
 	auto count_str = RedisMgr::GetInstance()->HGet(LOGIN_COUNT, minServer.name);
 	if (count_str.empty()) {
