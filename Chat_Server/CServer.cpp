@@ -6,12 +6,9 @@ CServer::CServer(boost::asio::io_context& io_context, short port):_io_context(io
 _acceptor(io_context, tcp::endpoint(tcp::v4(),port)),_timer(_io_context,std::chrono::seconds(60))
 {
 	cout << "Server start success, listen on port : " << _port << endl;
-	//_timer.async_wait(std::bind(&CServer::on_timer, this, placeholders::_1));
-	_timer.async_wait([this](boost::system::error_code e){
-		on_timer(e);
-	});
+	
 	StartAccept();
-}
+} 
 
 CServer::~CServer() {
 	cout << "Server destruct listen on port : " << _port << endl;
@@ -74,6 +71,11 @@ bool CServer::CheckValid(std::string sid)
 
 void CServer::on_timer(const boost::system::error_code& ec)
 {
+	if (ec)
+	{
+		std::cout << "timer error" << ec.message() << std::endl;
+		return;
+	}
 	std::vector<std::shared_ptr<CSession>> _expired_sessions;
 	int session_count = 0;
 
@@ -116,3 +118,18 @@ void CServer::on_timer(const boost::system::error_code& ec)
 		on_timer(e);
 	});
 }
+
+void CServer::StartTimer()
+{
+	//_timer.async_wait(std::bind(&CServer::on_timer, this, placeholders::_1));
+	auto self = shared_from_this();
+	_timer.async_wait([self](boost::system::error_code e) {
+		self->on_timer(e);
+	});
+}
+
+void CServer::StopTimer()
+{
+	_timer.cancel();
+}
+ 

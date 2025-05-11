@@ -8,7 +8,7 @@
 #include "ConfigMgr.h"
 using namespace std;
 using boost::asio::ip::tcp;
-class CServer
+class CServer : public std::enable_shared_from_this<CServer>
 {
 public:
 	CServer(boost::asio::io_context& io_context, short port);
@@ -18,7 +18,8 @@ public:
 	bool CheckValid(std::string);
 
 	void on_timer(const boost::system::error_code& ec);
-
+	void StartTimer();
+	void StopTimer();
 private:
 	void HandleAccept(shared_ptr<CSession>, const boost::system::error_code & error);
 	void StartAccept();

@@ -33,6 +33,8 @@ int main()
         auto port_str = cfg["SelfServer"]["Port"];
         //创建Cserver智能指针
         auto pointer_server = std::make_shared<CServer>(io_context, atoi(port_str.c_str()));
+        //启动定时器
+        pointer_server->StartTimer();
         //定义一个GrpcServer
         std::string server_address(cfg["SelfServer"]["Host"] + ":" + cfg["SelfServer"]["RPCPort"]);
         ChatServiceImpl service;
@@ -62,6 +64,7 @@ int main()
         io_context.run();
 
         grpc_server_thread.join();
+        pointer_server->StopTimer();
     }
     catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << endl;
