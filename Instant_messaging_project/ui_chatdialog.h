@@ -23,6 +23,7 @@
 #include <contactuserlist.h>
 #include <friendinfopage.h>
 #include <statewidget.h>
+#include <userinfopage.h>
 #include "chatuserlist.h"
 #include "clickedbtn.h"
 #include "customizeedit.h"
@@ -41,6 +42,7 @@ public:
     QLabel *side_head_lb;
     StateWidget *side_chat_lb;
     StateWidget *side_contact_lb;
+    StateWidget *side_settings_lb;
     QWidget *widget;
     QSpacerItem *verticalSpacer;
     QWidget *chat_user_wid;
@@ -57,6 +59,7 @@ public:
     ChatPage *chat_page;
     ApplyFriendPage *friend_apply_page;
     FriendInfoPage *friend_info_page;
+    UserInfoPage *user_info_page;
 
     void setupUi(QDialog *ChatDialog)
     {
@@ -107,6 +110,13 @@ public:
         side_contact_lb->setMaximumSize(QSize(30, 30));
 
         verticalLayout_5->addWidget(side_contact_lb);
+
+        side_settings_lb = new StateWidget(widget_2);
+        side_settings_lb->setObjectName(QString::fromUtf8("side_settings_lb"));
+        side_settings_lb->setMinimumSize(QSize(30, 30));
+        side_settings_lb->setMaximumSize(QSize(30, 30));
+
+        verticalLayout_5->addWidget(side_settings_lb);
 
 
         verticalLayout_4->addWidget(widget_2);
@@ -197,13 +207,16 @@ public:
         friend_info_page = new FriendInfoPage();
         friend_info_page->setObjectName(QString::fromUtf8("friend_info_page"));
         stackedWidget->addWidget(friend_info_page);
+        user_info_page = new UserInfoPage();
+        user_info_page->setObjectName(QString::fromUtf8("user_info_page"));
+        stackedWidget->addWidget(user_info_page);
 
         horizontalLayout->addWidget(stackedWidget);
 
 
         retranslateUi(ChatDialog);
 
-        stackedWidget->setCurrentIndex(1);
+        stackedWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(ChatDialog);

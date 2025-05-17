@@ -18,6 +18,7 @@
 #include "lineitem.h"
 #include "tcpmgr.h"
 #include "usermgr.h"
+#include <QTimer>
 
 
 ChatDialog::ChatDialog(QWidget *parent) :
@@ -79,11 +80,15 @@ ChatDialog::ChatDialog(QWidget *parent) :
 
     ui->side_contact_lb->SetState("normal","hover","pressed","selected_normal","selected_hover","selected_pressed");
 
+    ui->side_settings_lb->SetState("normal","hover","pressed","selected_normal","selected_hover","selected_pressed");
+
     AddLBGroup(ui->side_chat_lb);
     AddLBGroup(ui->side_contact_lb);
+    AddLBGroup(ui->side_settings_lb);
 
     connect(ui->side_chat_lb, &StateWidget::clicked, this, &ChatDialog::slot_side_chat);
     connect(ui->side_contact_lb, &StateWidget::clicked, this, &ChatDialog::slot_side_contact);
+    connect(ui->side_settings_lb, &StateWidget::clicked, this, &ChatDialog::slot_side_setting);
 
     //链接搜索框输入变化
     connect(ui->search_edit, &QLineEdit::textChanged, this, &ChatDialog::slot_text_changed);
@@ -148,14 +153,14 @@ ChatDialog::ChatDialog(QWidget *parent) :
 
     connect(ui->chat_page, &ChatPage::sig_append_send_chat_msg, this, &ChatDialog::slot_append_send_chat_msg);
 
-    _timer=new QTimer(this);
-    connect(_timer,&QTimer::timeout,this,[this](){
-        auto user_info = UserMgr::GetInstance()->GetUserInfo();
-        QJsonObject textobj;
-        textobj["fromuid"] = user_info->_uid;
-        QJsonDocument doc(textobj);
-        QByteArray jsondata = doc.toJson(QJsonDocument::Compact);
-        emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_HEARTBEAT_REQ,jsondata);
+    _timer = new QTimer(this);
+    connect(_timer, &QTimer::timeout, this, [this](){
+            auto user_info = UserMgr::GetInstance()->GetUserInfo();
+            QJsonObject textObj;
+            textObj["fromuid"] = user_info->_uid;
+            QJsonDocument doc(textObj);
+            QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+            emit TcpMgr::GetInstance()->sig_send_data(ReqId::ID_HEART_BEAT_REQ, jsonData);
     });
 
     _timer->start(10000);
@@ -163,7 +168,7 @@ ChatDialog::ChatDialog(QWidget *parent) :
 
 ChatDialog::~ChatDialog()
 {
-    _timer->start(10000);
+    _timer->stop();
     delete ui;
 }
 
@@ -556,6 +561,14 @@ void ChatDialog::ShowSearch(bool bsearch)
         ui->search_list->CloseFindDlg();
 		ui->search_edit->clear();
 		ui->search_edit->clearFocus();
+    }else if(_state == ChatUIMode::SettingsMode){
+        ui->chat_user_list->hide();
+        ui->search_list->hide();
+        ui->con_user_list->show();
+        _mode = ChatUIMode::ContactMode;
+        ui->search_list->CloseFindDlg();
+        ui->search_edit->clear();
+        ui->search_edit->clearFocus();
     }
 }
 
@@ -598,6 +611,16 @@ void ChatDialog::slot_side_contact(){
     }
 
     _state = ChatUIMode::ContactMode;
+    ShowSearch(false);
+}
+
+void ChatDialog::slot_side_setting(){
+    qDebug()<< "receive side setting clicked";
+    ClearLabelState(ui->side_settings_lb);
+    //设置
+    ui->stackedWidget->setCurrentWidget(ui->user_info_page);
+
+    _state = ChatUIMode::SettingsMode;
     ShowSearch(false);
 }
 

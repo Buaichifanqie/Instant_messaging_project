@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QLabel>
 #include <QList>
-#include <QTimer>
 #include "statelabel.h"
 #include "global.h"
 #include "statewidget.h"
@@ -48,11 +47,12 @@ private:
     //todo...
     QMap<int, QListWidgetItem*> _chat_items_added;
     int _cur_chat_uid;
-    QTimer* _timer;
+    QTimer * _timer;
 public slots:
     void slot_loading_chat_user();
     void slot_side_chat();
     void slot_side_contact();
+    void slot_side_setting();
     void slot_text_changed(const QString & str);
     void slot_focus_out();
     void slot_loading_contact_user();
