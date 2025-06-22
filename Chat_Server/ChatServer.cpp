@@ -16,8 +16,10 @@ bool bstop = false;
 std::condition_variable cond_quit;
 std::mutex mutex_quit;
 
+
 int main()
 {
+    system("chcp 65001");
     auto& cfg = ConfigMgr::Inst();
     auto server_name = cfg["SelfServer"]["Name"];
     try {

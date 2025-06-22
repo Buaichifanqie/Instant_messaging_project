@@ -285,19 +285,19 @@ bool RedisMgr::HSet(const std::string &key, const std::string &hkey, const std::
 	}
 	auto reply = (redisReply*)redisCommand(connect, "HSET %s %s %s", key.c_str(), hkey.c_str(), value.c_str());
 	if (reply == nullptr ) {
-		std::cout << "Execut command [ HSet " << key << "  " << hkey <<"  " << value << " ] failure ! " << std::endl;
+		//std::cout << "Execut command [ HSet " << key << "  " << hkey <<"  " << value << " ] failure ! " << std::endl;
 		_con_pool->returnConnection(connect);
 		return false;
 	}
 
 	if (reply->type != REDIS_REPLY_INTEGER) {
-		std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << value << " ] failure ! " << std::endl;
+		//std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << value << " ] failure ! " << std::endl;
 		freeReplyObject(reply);
 		_con_pool->returnConnection(connect);
 		return false;
 	}
 
-	std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << value << " ] success ! " << std::endl;
+	//std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << value << " ] success ! " << std::endl;
 	freeReplyObject(reply);
 	_con_pool->returnConnection(connect);
 	return true;
@@ -322,18 +322,18 @@ bool RedisMgr::HSet(const char* key, const char* hkey, const char* hvalue, size_
 
 	auto reply = (redisReply*)redisCommandArgv(connect, 4, argv, argvlen);
 	if (reply == nullptr ) {
-		std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] failure ! " << std::endl;
+		//std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] failure ! " << std::endl;
 		_con_pool->returnConnection(connect);
 		return false;
 	}
 
 	if (reply->type != REDIS_REPLY_INTEGER) {
-		std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] failure ! " << std::endl;
+		//std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] failure ! " << std::endl;
 		freeReplyObject(reply);
 		_con_pool->returnConnection(connect);
 		return false;
 	}
-	std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] success ! " << std::endl;
+	//std::cout << "Execut command [ HSet " << key << "  " << hkey << "  " << hvalue << " ] success ! " << std::endl;
 	freeReplyObject(reply);
 	_con_pool->returnConnection(connect);
 	return true;

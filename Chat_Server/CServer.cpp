@@ -79,27 +79,31 @@ void CServer::on_timer(const boost::system::error_code& ec)
 	std::vector<std::shared_ptr<CSession>> _expired_sessions;
 	int session_count = 0;
 
+	//拷贝一个副本
+	std::map<std::string, std::shared_ptr<CSession>> sessions_copy;
 	{
 		lock_guard<mutex> lock(_mutex);
-		time_t now = time(nullptr);
-		for (auto iter = _sessions.begin(); iter != _sessions.end(); ++iter)
-		{
-			auto b_expired = iter->second->IsHeartbeatExpired(now);
-			if (b_expired)
-			{
-				iter->second->Close();
-				//收集过期时间
-				_expired_sessions.push_back(iter->second);
-				session_count++;
-			}
-			else
-			{
-				session_count++;
-
-			}
-		}
+		sessions_copy = _sessions; //拷贝当前的session
 	}
-	
+
+	time_t now = time(nullptr);
+	for (auto iter = sessions_copy.begin(); iter != sessions_copy.end(); iter++)
+	{
+		//判断是否过期
+		auto b_expired = iter->second->IsHeartbeatExpired(now);
+		if (b_expired)
+		{
+			//关闭socket，其实这里也会触发async_read的回调函数的错误处理
+			iter->second->Close();
+			//收集过期时间
+			_expired_sessions.push_back(iter->second);
+			continue;
+		}
+		//如果没有过期，则继续处理
+		session_count++;
+	}
+
+
 	//设置session数量
 	auto& cfg = ConfigMgr::Inst();
 	auto self_name = cfg["SelfServer"]["Name"];
